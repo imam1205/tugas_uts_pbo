@@ -151,6 +151,8 @@ def bayar_zakat():
         if 'db' in locals() and db.is_connected():
             cursor.close()
             db.close()
+# ...existing code...
+
 def bayar_zakat():
     try:
         db = connect_db()
@@ -200,3 +202,28 @@ def bayar_zakat():
         if 'db' in locals() and db.is_connected():
             cursor.close()
             db.close()
+
+def tambah_muzakki():
+    try:
+        db = connect_db()
+        cursor = db.cursor()
+        
+        print("\n=== Tambah Data Muzakki ===")  # Fixed typo in header
+        id_muzakki = input("Masukkan ID Muzakki: ")
+        nama = input("Masukkan Nama: ")
+        alamat = input("Masukkan Alamat: ")
+        no_hp = input("Masukkan No HP: ")
+        
+        sql = "INSERT INTO master_muzakki VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (id_muzakki, nama, alamat, no_hp))
+        db.commit()
+        print("Data muzakki berhasil ditambahkan!")
+        
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if 'db' in locals() and db.is_connected():
+            cursor.close()
+            db.close()
+
+# ...existing code...
