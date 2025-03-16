@@ -151,4 +151,52 @@ def bayar_zakat():
         if 'db' in locals() and db.is_connected():
             cursor.close()
             db.close()
-
+def bayar_zakat():
+    try:
+        db = connect_db()
+        cursor = db.cursor()
+        
+        print("\n=== Pembayaran Zakat Fitrah ===")
+        id_muzakki = input("Masukkan ID Muzakki: ")
+        jumlah_jiwa = int(input("Masukkan Jumlah Jiwa: "))
+        jenis_pembayaran = input("Jenis Pembayaran (beras/uang): ").lower()
+        
+        if jenis_pembayaran == 'beras':
+            # Tampilkan daftar beras
+            cursor.execute("SELECT * FROM master_beras")
+            beras_list = cursor.fetchall()
+            print("\nDaftar Jenis Beras:")
+            for beras in beras_list:
+                print(f"{beras[0]}. {beras[1]} - Rp{beras[2]} per kg")
+            
+            id_beras = int(input("Pilih ID Beras: "))
+            jumlah_pembayaran = 2.5 * jumlah_jiwa  # 2.5 kg per jiwa
+            
+        else:  # pembayaran uang
+            cursor.execute("SELECT harga_per_kg FROM master_beras WHERE id_beras = 1")
+            harga_beras = cursor.fetchone()[0]
+            jumlah_pembayaran = 2.5 * jumlah_jiwa * harga_beras
+            id_beras = None
+        
+        sql = """
+            INSERT INTO transaksi_zakat 
+            (id_muzakki, tanggal, jumlah_jiwa, jenis_pembayaran, jumlah_pembayaran, id_beras)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            id_muzakki,
+            datetime.now(),
+            jumlah_jiwa,
+            jenis_pembayaran,
+            jumlah_pembayaran,
+            id_beras
+        ))
+        db.commit()
+        print("Pembayaran zakat berhasil dicatat!")
+        
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if 'db' in locals() and db.is_connected():
+            cursor.close()
+            db.close()
