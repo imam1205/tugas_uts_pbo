@@ -151,51 +151,33 @@ def bayar_zakat():
         if 'db' in locals() and db.is_connected():
             cursor.close()
             db.close()
-# ...existing code...
 
-def bayar_zakat():
+def lihat_history():
     try:
         db = connect_db()
         cursor = db.cursor()
         
-        print("\n=== Pembayaran Zakat Fitrah ===")
-        id_muzakki = input("Masukkan ID Muzakki: ")
-        jumlah_jiwa = int(input("Masukkan Jumlah Jiwa: "))
-        jenis_pembayaran = input("Jenis Pembayaran (beras/uang): ").lower()
-        
-        if jenis_pembayaran == 'beras':
-            # Tampilkan daftar beras
-            cursor.execute("SELECT * FROM master_beras")
-            beras_list = cursor.fetchall()
-            print("\nDaftar Jenis Beras:")
-            for beras in beras_list:
-                print(f"{beras[0]}. {beras[1]} - Rp{beras[2]} per kg")
-            
-            id_beras = int(input("Pilih ID Beras: "))
-            jumlah_pembayaran = 2.5 * jumlah_jiwa  # 2.5 kg per jiwa
-            
-        else:  # pembayaran uang
-            cursor.execute("SELECT harga_per_kg FROM master_beras WHERE id_beras = 1")
-            harga_beras = cursor.fetchone()[0]
-            jumlah_pembayaran = 2.5 * jumlah_jiwa * harga_beras
-            id_beras = None
-        
+        print("\n=== History Pembayaran Zakat ===")
         sql = """
-            INSERT INTO transaksi_zakat 
-            (id_muzakki, tanggal, jumlah_jiwa, jenis_pembayaran, jumlah_pembayaran, id_beras)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            SELECT t.*, m.nama, b.jenis_beras
+            FROM transaksi_zakat t
+            JOIN master_muzakki m ON t.id_muzakki = m.id_muzakki
+            LEFT JOIN master_beras b ON t.id_beras = b.id_beras
         """
-        cursor.execute(sql, (
-            id_muzakki,
-            datetime.now(),
-            jumlah_jiwa,
-            jenis_pembayaran,
-            jumlah_pembayaran,
-            id_beras
-        ))
-        db.commit()
-        print("Pembayaran zakat berhasil dicatat!")
+        cursor.execute(sql)
+        hasil = cursor.fetchall()
         
+        for row in hasil:
+            print(f"\nID Transaksi: {row[0]}")
+            print(f"Nama Muzakki: {row[7]}")
+            print(f"Tanggal: {row[2]}")
+            print(f"Jumlah Jiwa: {row[3]}")
+            print(f"Jenis Pembayaran: {row[4]}")
+            print(f"Jumlah Pembayaran: {row[5]}")
+            if row[8]:
+                print(f"Jenis Beras: {row[8]}")
+            print("-" * 30)
+            
     except mysql.connector.Error as err:
         print(f"Error: {err}")
     finally:
@@ -203,27 +185,32 @@ def bayar_zakat():
             cursor.close()
             db.close()
 
-def tambah_muzakki():
-    try:
-        db = connect_db()
-        cursor = db.cursor()
+def main():
+    setup_database()
+    
+    while True:
+        print("\n=== Menu Zakat Fitrah ===")
+        print("1. Tambah Data Muzakki")
+        print("2. Tambah Jenis Beras")
+        print("3. Bayar Zakat")
+        print("4. Lihat History")
+        print("5. Keluar")
         
-        print("\n=== Tambah Data Muzakki ===")  # Fixed typo in header
-        id_muzakki = input("Masukkan ID Muzakki: ")
-        nama = input("Masukkan Nama: ")
-        alamat = input("Masukkan Alamat: ")
-        no_hp = input("Masukkan No HP: ")
+        pilihan = input("\nPilih menu (1-5): ")
         
-        sql = "INSERT INTO master_muzakki VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql, (id_muzakki, nama, alamat, no_hp))
-        db.commit()
-        print("Data muzakki berhasil ditambahkan!")
-        
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-    finally:
-        if 'db' in locals() and db.is_connected():
-            cursor.close()
-            db.close()
+        if pilihan == '1':
+            tambah_muzakki()
+        elif pilihan == '2':
+            tambah_beras()
+        elif pilihan == '3':
+            bayar_zakat()
+        elif pilihan == '4':
+            lihat_history()
+        elif pilihan == '5':
+            print("Program selesai!")
+            break
+        else:
+            print("Pilihan tidak valid!")
 
-# ...existing code...
+if __name__ == "__main__":
+    main()
