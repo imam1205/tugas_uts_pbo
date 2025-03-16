@@ -152,3 +152,46 @@ def bayar_zakat():
             cursor.close()
             db.close()
 
+def tambah_muzakki():
+    try:
+        db = connect_db()
+        cursor = db.cursor()
+        
+        print("\n=== Tambah Da1ta Muzakki ===")
+        id_muzakki = input("Masukkan ID Muzakki: ")
+        nama = input("Masukkan Nama: ")
+        alamat = input("Masukkan Alamat: ")
+        no_hp = input("Masukkan No HP: ")
+        
+        sql = "INSERT INTO master_muzakki VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (id_muzakki, nama, alamat, no_hp))
+        db.commit()
+        print("Data muzakki berhasil ditambahkan!")
+        
+        # except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if 'db' in locals() and db.is_connected():
+            cursor.close()
+            db.close()
+
+def tambah_beras():
+    try:
+        db = connect_db()
+        cursor = db.cursor()
+        
+        print("\n=== Tambah Jenis Beras ===")
+        jenis_beras = input("Masukkan Jenis Beras: ")
+        harga = float(input("Masukkan Harga per Kg: "))
+        
+        sql = "INSERT INTO master_beras (jenis_beras, harga_per_kg) VALUES (%s, %s)"
+        cursor.execute(sql, (jenis_beras, harga))
+        db.commit()
+        print("Data beras berhasil ditambahkan!")
+        
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if 'db' in locals() and db.is_connected():
+            cursor.close()
+    #         db.close()
