@@ -108,9 +108,27 @@ def bayar_zakat():
         cursor = db.cursor()
         
         print("\n=== Pembayaran Zakat Fitrah ===")
-        id_muzakki = input("Masukkan ID Muzakki: ")
+        # Validate Muzakki ID first
+        while True:
+            id_muzakki = input("Masukkan ID Muzakki: ")
+            cursor.execute("SELECT nama FROM master_muzakki WHERE id_muzakki = %s", (id_muzakki,))
+            result = cursor.fetchone()
+            
+            if result:
+                print(f"Muzakki ditemukan: {result[0]}")
+                break
+            else:
+                print("ID Muzakki tidak terdaftar! Silahkan masukkan ID yang benar.")
+                pilihan = input("Ingin mencoba lagi? (y/n): ").lower()
+                if pilihan != 'y':
+                    print("Pembayaran dibatalkan.")
+                    return
+
         jumlah_jiwa = int(input("Masukkan Jumlah Jiwa: "))
         jenis_pembayaran = input("Jenis Pembayaran (beras/uang): ").lower()
+        
+        # Konstanta zakat per jiwa (dalam liter)
+        ZAKAT_PER_JIWA_LITER = 3.5  # 3.5 liter per jiwa
         
         if jenis_pembayaran == 'beras':
             # Tampilkan daftar beras
@@ -118,15 +136,21 @@ def bayar_zakat():
             beras_list = cursor.fetchall()
             print("\nDaftar Jenis Beras:")
             for beras in beras_list:
-                print(f"{beras[0]}. {beras[1]} - Rp{beras[2]} per kg")
+                # Harga per liter = harga per kg * 0.8 (konversi kg ke liter)
+                harga_per_liter = float(beras[2]) * 0.8
+                print(f"{beras[0]}. {beras[1]} - Rp{harga_per_liter:.2f} per liter")
             
             id_beras = int(input("Pilih ID Beras: "))
-            jumlah_pembayaran = 2.5 * jumlah_jiwa  # 2.5 kg per jiwa
+            jumlah_pembayaran = ZAKAT_PER_JIWA_LITER * jumlah_jiwa  # dalam liter
+            print(f"Total pembayaran: {jumlah_pembayaran:.1f} liter")
             
         else:  # pembayaran uang
             cursor.execute("SELECT harga_per_kg FROM master_beras WHERE id_beras = 1")
             harga_beras = cursor.fetchone()[0]
-            jumlah_pembayaran = 2.5 * jumlah_jiwa * harga_beras
+            # Konversi ke harga per liter dan hitung total
+            harga_per_liter = harga_beras * 0.8  # 1 kg beras ≈ 0.8 liter
+            jumlah_pembayaran = ZAKAT_PER_JIWA_LITER * jumlah_jiwa * harga_per_liter
+            print(f"Total pembayaran: Rp{jumlah_pembayaran:,.2f}")
             id_beras = None
         
         sql = """
